@@ -18,9 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const floorPlanLabel = document.getElementById('assignmentFloorPlanLabel');
   const floorPlanEmpty = document.getElementById('assignmentFloorPlanEmpty');
   const submitButton = form.querySelector('button[type="submit"]');
-  const storageKey = 'roomq.roomUsage.v1';
+  const authPanel = document.getElementById('adminSessionPanel');
   let records = [];
-  let storageReady = true;
+  let authenticated = false;
 
   const startTimePicker = window.RoomQTime.attach(
     document.getElementById('assignmentStartPicker'),
@@ -130,55 +130,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function isValidRecord(record) {
-    return Boolean(
-      record &&
-      typeof record === 'object' &&
-      typeof record.id === 'string' &&
-      typeof record.buildingId === 'string' &&
-      typeof record.floorId === 'string' &&
-      typeof record.regionId === 'string' &&
-      typeof record.roomLabel === 'string' &&
-      (record.roomNumber === null || Number.isInteger(record.roomNumber)) &&
-      /^\d{4}-\d{2}-\d{2}$/.test(record.date) &&
-      /^\d{2}:\d{2}$/.test(record.startTime) &&
-      /^\d{2}:\d{2}$/.test(record.endTime) &&
-      record.startTime < record.endTime
-    );
-  }
-
-  function loadRecords() {
-    storageReady = true;
-    submitButton.disabled = false;
+  async function loadRecords() {
     try {
-      const saved = window.localStorage.getItem(storageKey);
-      if (saved === null) {
-        return [];
-      }
-
-      const parsed = JSON.parse(saved);
-      if (!Array.isArray(parsed) || parsed.some((record) => !isValidRecord(record))) {
-        throw new Error('Saved room-use data has an invalid format.');
-      }
-      return parsed;
+      records = await window.RoomQApi.request('/api/schedules?kind=reservation');
+      renderRecords();
     } catch (error) {
-      storageReady = false;
-      console.error('Unable to load saved room-use data.', error);
-      feedback.textContent = 'Saved assignments could not be loaded from this browser.';
-      submitButton.disabled = true;
-      return [];
-    }
-  }
-
-  function saveRecords(updatedRecords) {
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify(updatedRecords));
-      records = updatedRecords;
-      return true;
-    } catch (error) {
-      console.error('Unable to save room-use data.', error);
-      feedback.textContent = 'Assignment could not be saved in this browser. Please try again.';
-      return false;
+      feedback.textContent = `Reservations could not be loaded: ${error.message}`;
     }
   }
 
@@ -231,28 +188,37 @@ document.addEventListener('DOMContentLoaded', () => {
       left.date.localeCompare(right.date) || left.startTime.localeCompare(right.startTime)
     );
     sortedRecords.forEach((record) => {
-      const building = getBuilding(record.buildingId);
-      const floor = getFloor(building, record.floorId);
       const item = document.createElement('article');
       item.className = 'assignment-record';
 
       const copy = document.createElement('div');
       copy.className = 'assignment-record-copy';
       const title = document.createElement('strong');
-      title.textContent = record.roomLabel;
+      const room = record.classroom;
+      title.textContent = room
+        ? room.roomNumber === null
+          ? room.name || 'Named room'
+          : `Room ${room.roomNumber}${room.name ? ` · ${room.name}` : ''}`
+        : 'Unassigned room';
       const description = document.createElement('span');
-      description.textContent = `${building ? building.name : record.buildingId} · ${floor ? floor.label : `Floor ${record.floorId}`} · ${record.date} · ${window.RoomQTime.format(record.startTime)}–${window.RoomQTime.format(record.endTime)}`;
+      description.textContent = `${room ? `${room.buildingName} · ${room.floorLabel} · ` : ''}${record.date} · ${window.RoomQTime.format(record.startTime)}–${window.RoomQTime.format(record.endTime)}`;
       copy.append(title, description);
 
       const removeButton = document.createElement('button');
       removeButton.type = 'button';
       removeButton.className = 'room-use-remove';
       removeButton.textContent = 'Remove';
-      removeButton.setAttribute('aria-label', `Remove ${record.roomLabel} assignment on ${record.date}`);
-      removeButton.addEventListener('click', () => {
-        if (saveRecords(records.filter((savedRecord) => savedRecord.id !== record.id))) {
-          feedback.textContent = `Removed the assignment for ${record.roomLabel}.`;
-          renderRecords();
+      removeButton.disabled = !authenticated;
+      removeButton.setAttribute('aria-label', `Remove room reservation on ${record.date}`);
+      removeButton.addEventListener('click', async () => {
+        removeButton.disabled = true;
+        try {
+          await window.RoomQApi.request(`/api/schedules/${record.id}`, { method: 'DELETE' });
+          feedback.textContent = 'Removed the room reservation.';
+          await loadRecords();
+        } catch (error) {
+          feedback.textContent = error.message;
+          removeButton.disabled = !authenticated;
         }
       });
 
@@ -261,10 +227,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function saveAssignment(event) {
+  async function saveAssignment(event) {
     event.preventDefault();
-    if (!storageReady) {
-      feedback.textContent = 'Assignments cannot be saved because browser storage is unavailable.';
+    if (!authenticated) {
+      feedback.textContent = 'Sign in as an administrator before saving reservations.';
       return;
     }
 
@@ -291,42 +257,34 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const overlaps = records.some((record) =>
-      record.buildingId === building.id &&
-      record.floorId === floor.id &&
-      record.regionId === region.id &&
-      record.date === date &&
-      startTime < record.endTime &&
-      endTime > record.startTime
-    );
-    if (overlaps) {
-      feedback.textContent = 'This room already has an overlapping assignment on that date.';
-      return;
-    }
-
-    const roomNumber = getRoomNumber(floor, regionIndex, region);
     const roomLabel = getRoomLabel(floor, regionIndex, region);
-    const record = {
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      buildingId: building.id,
-      floorId: floor.id,
-      regionId: region.id,
-      roomNumber,
-      roomName: region.name || '',
-      roomLabel,
-      date,
-      startTime,
-      endTime
-    };
-
-    if (saveRecords([...records, record])) {
+    submitButton.disabled = true;
+    try {
+      await window.RoomQApi.request('/api/schedules', {
+        method: 'POST',
+        body: JSON.stringify({
+          kind: 'reservation',
+          classroomId: `${building.id}-${floor.id}-${region.id}`,
+          recurrence: 'once',
+          date,
+          startTime,
+          endTime
+        })
+      });
       feedback.textContent = `Saved ${roomLabel} for ${date}, ${window.RoomQTime.format(startTime)}–${window.RoomQTime.format(endTime)}.`;
-      renderRecords();
+      await loadRecords();
       form.reset();
       dateInput.value = localDate;
       updateFloors();
       startTimePicker.setValue('');
       endTimePicker.setValue('');
+    } catch (error) {
+      const overlap = error.conflict && error.conflict.overlapPeriod;
+      feedback.textContent = overlap
+        ? `Room conflict from ${window.RoomQTime.format(overlap.startTime)} to ${window.RoomQTime.format(overlap.endTime)}. No reservation was saved.`
+        : error.message;
+    } finally {
+      submitButton.disabled = !authenticated;
     }
   }
 
@@ -345,14 +303,10 @@ document.addEventListener('DOMContentLoaded', () => {
   form.addEventListener('submit', saveAssignment);
   window.addEventListener('resize', renderFloorPlan);
 
-  records = loadRecords();
-  renderRecords();
-
-  window.addEventListener('storage', (event) => {
-    if (event.key !== storageKey && event.key !== null) {
-      return;
-    }
-    records = loadRecords();
+  window.RoomQApi.mountAdminPanel(authPanel, (user) => {
+    authenticated = Boolean(user);
+    submitButton.disabled = !authenticated;
     renderRecords();
   });
+  loadRecords();
 });

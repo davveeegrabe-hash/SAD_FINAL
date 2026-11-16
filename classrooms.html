@@ -23,10 +23,10 @@
         <nav class="sidebar-nav" aria-label="Main navigation">
           <a href="index.html" class="nav-item"><span class="nav-icon">◫</span>Dashboard</a>
           <a href="classrooms.html" class="nav-item active" aria-current="page"><span class="nav-icon">▣</span>Classrooms</a>
-          <a href="#" class="nav-item"><span class="nav-icon">▤</span>Schedules</a>
+          <a href="schedules.html" class="nav-item"><span class="nav-icon">▤</span>Schedules</a>
           <a href="assignments.html" class="nav-item"><span class="nav-icon">◍</span>Assignments</a>
-          <a href="#" class="nav-item"><span class="nav-icon">◌</span>Availability</a>
-          <a href="#" class="nav-item"><span class="nav-icon">⚑</span>Conflicts</a>
+          <a href="#availabilitySearch" class="nav-item"><span class="nav-icon">◌</span>Availability</a>
+          <a href="conflicts.html" class="nav-item"><span class="nav-icon">⚑</span>Conflicts</a>
         </nav>
 
         <div class="profile-box">
@@ -66,25 +66,38 @@
           </div>
 
           <div class="explorer-field time-field">
-            <span>Check time</span>
-            <div class="time-picker-controls" id="availabilityTimePicker">
-              <select data-time-hour aria-label="Hour"></select>
+            <span>From</span>
+            <div class="time-picker-controls" id="availabilityStartPicker">
+              <select data-time-hour aria-label="Start hour"></select>
               <span aria-hidden="true">:</span>
-              <select data-time-minute aria-label="Minute"></select>
-              <select data-time-period aria-label="AM or PM"></select>
+              <select data-time-minute aria-label="Start minute"></select>
+              <select data-time-period aria-label="Start AM or PM"></select>
             </div>
-            <input id="availabilityTime" type="hidden" />
+            <input id="availabilityStart" type="hidden" />
           </div>
 
+          <div class="explorer-field time-field">
+            <span>Until</span>
+            <div class="time-picker-controls" id="availabilityEndPicker">
+              <select data-time-hour aria-label="End hour"></select>
+              <span aria-hidden="true">:</span>
+              <select data-time-minute aria-label="End minute"></select>
+              <select data-time-period aria-label="End AM or PM"></select>
+            </div>
+            <input id="availabilityEnd" type="hidden" />
+          </div>
+          <button type="button" class="assignment-submit availability-search-button" id="availabilitySearch">Search availability</button>
+
           <p class="data-connection-note" id="availabilityNote" role="status">
-            Choose a date and time to check room availability.
+            Choose a date and time range to check room availability.
           </p>
         </section>
 
         <section class="availability-legend explorer-legend" aria-label="Availability legend">
           <span class="legend-title">Availability for selected date and time</span>
           <span><i class="legend-dot available"></i>Available</span>
-          <span><i class="legend-dot unavailable"></i>Not available</span>
+          <span><i class="legend-dot occupied"></i>Occupied</span>
+          <span><i class="legend-dot reserved"></i>Reserved</span>
           <span><i class="legend-dot selected"></i>Selected room</span>
         </section>
 
@@ -172,10 +185,55 @@
               <span class="status-pending-dot" id="detailsStatusDot"></span>
             </div>
 
+            <section class="room-booking-panel" id="roomBookingPanel" aria-labelledby="roomBookingHeading" hidden>
+              <div class="room-booking-header">
+                <p class="panel-kicker">Room reservation</p>
+                <h3 id="roomBookingHeading">Book this classroom</h3>
+                <p id="roomBookingRoom"></p>
+              </div>
+
+              <form id="roomBookingForm" class="room-booking-form">
+                <label class="assignment-field">
+                  <span>Date</span>
+                  <input id="roomBookingDate" type="date" required />
+                </label>
+
+                <fieldset class="assignment-time-field">
+                  <legend>From</legend>
+                  <div class="time-picker-controls" id="roomBookingStartPicker">
+                    <select data-time-hour aria-label="Booking start hour" required></select>
+                    <span aria-hidden="true">:</span>
+                    <select data-time-minute aria-label="Booking start minute" required></select>
+                    <select data-time-period aria-label="Booking start AM or PM" required></select>
+                  </div>
+                  <input type="hidden" id="roomBookingStart" />
+                </fieldset>
+
+                <fieldset class="assignment-time-field">
+                  <legend>Until</legend>
+                  <div class="time-picker-controls" id="roomBookingEndPicker">
+                    <select data-time-hour aria-label="Booking end hour" required></select>
+                    <span aria-hidden="true">:</span>
+                    <select data-time-minute aria-label="Booking end minute" required></select>
+                    <select data-time-period aria-label="Booking end AM or PM" required></select>
+                  </div>
+                  <input type="hidden" id="roomBookingEnd" />
+                </fieldset>
+
+                <button class="assignment-submit" id="roomBookingSubmit" type="submit" disabled>Book room</button>
+                <p id="roomBookingFeedback" class="assignment-feedback room-booking-feedback" role="status"></p>
+              </form>
+
+              <div class="room-booking-auth">
+                <p id="roomBookingAuthNote">Sign in as an administrator to confirm this reservation.</p>
+                <div id="roomBookingAuthPanel"></div>
+              </div>
+            </section>
+
             <section class="schedule-preview" aria-labelledby="scheduleHeading">
               <div class="schedule-preview-header">
                 <h3 id="scheduleHeading">Schedule</h3>
-                <button type="button" disabled>View full schedule</button>
+                <a id="viewFullScheduleLink" href="schedules.html">View full schedule</a>
               </div>
               <div class="schedule-empty" id="scheduleEmpty">
                 Select a room to view saved use times.
@@ -184,10 +242,13 @@
 
           </aside>
         </div>
+
       </main>
     </div>
     <script src="script.js"></script>
     <script src="roomq-time.js"></script>
+    <script src="roomq-data.js"></script>
+    <script src="roomq-api.js"></script>
     <script src="classroom-explorer.js"></script>
   </body>
 </html>

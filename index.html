@@ -23,10 +23,10 @@
         <nav class="sidebar-nav" aria-label="Main navigation">
           <a href="#" class="nav-item active"><span class="nav-icon">◫</span>Dashboard</a>
           <a href="classrooms.html" class="nav-item"><span class="nav-icon">▣</span>Classrooms</a>
-          <a href="#" class="nav-item"><span class="nav-icon">▤</span>Schedules</a>
+          <a href="schedules.html" class="nav-item"><span class="nav-icon">▤</span>Schedules</a>
           <a href="assignments.html" class="nav-item"><span class="nav-icon">◍</span>Assignments</a>
-          <a href="#" class="nav-item"><span class="nav-icon">◌</span>Availability</a>
-          <a href="#" class="nav-item"><span class="nav-icon">⚑</span>Conflicts</a>
+          <a href="classrooms.html" class="nav-item"><span class="nav-icon">◌</span>Availability</a>
+          <a href="conflicts.html" class="nav-item"><span class="nav-icon">⚑</span>Conflicts</a>
         </nav>
 
         <div class="profile-box">
@@ -88,22 +88,22 @@
         <section class="dashboard-stats" aria-label="Classroom summary">
           <article class="summary-card summary-primary">
             <div class="summary-icon">▣</div>
-            <div><p>Total Classrooms</p><strong>48</strong></div>
+            <div><p>Total Scheduled Classes</p><strong id="dashboardTotalClasses">—</strong></div>
             <span class="summary-accent"></span>
           </article>
           <article class="summary-card">
             <div class="summary-icon accent">◍</div>
-            <div><p>Available Now</p><strong>22</strong></div>
+            <div><p>Assigned Classrooms</p><strong id="dashboardAssignedRooms">—</strong></div>
             <span class="summary-accent"></span>
           </article>
           <article class="summary-card">
             <div class="summary-icon navy">◐</div>
-            <div><p>Occupied</p><strong>26</strong></div>
+            <div><p>Today's Classes</p><strong id="dashboardTodayClasses">—</strong></div>
             <span class="summary-accent"></span>
           </article>
           <article class="summary-card">
             <div class="summary-icon sky">▤</div>
-            <div><p>Room Assignments</p><strong>126</strong></div>
+            <div><p>Unassigned Classes</p><strong id="dashboardUnassignedClasses">—</strong></div>
             <span class="summary-accent"></span>
           </article>
         </section>
@@ -114,39 +114,17 @@
               <p class="panel-kicker">Room availability</p>
               <h2 id="availability-heading">Classrooms across campus</h2>
             </div>
-            <span class="availability-legend"><i></i> Status overview</span>
+            <span class="availability-legend"><i></i> Current time range</span>
           </div>
 
-          <div class="room-cards">
-            <article class="room-card room-available">
-              <div class="room-card-top"><span class="room-symbol">A</span><span class="room-status">Available</span></div>
-              <h3>Room 101</h3>
-              <p>Building A <span>·</span> 2nd Floor</p>
-              <small>Next open slot <strong>9:00 AM–12:00 PM</strong></small>
-            </article>
-            <article class="room-card room-occupied">
-              <div class="room-card-top"><span class="room-symbol">B</span><span class="room-status">Occupied</span></div>
-              <h3>Room 205</h3>
-              <p>Building B <span>·</span> 2nd Floor</p>
-              <small>Class in session <strong>8:00 AM–11:30 AM</strong></small>
-            </article>
-            <article class="room-card room-reserved">
-              <div class="room-card-top"><span class="room-symbol">C</span><span class="room-status">Reserved</span></div>
-              <h3>Room 315</h3>
-              <p>Building C <span>·</span> 3rd Floor</p>
-              <small>Reserved slot <strong>10:30 AM–1:00 PM</strong></small>
-            </article>
-            <article class="room-card room-available">
-              <div class="room-card-top"><span class="room-symbol">D</span><span class="room-status">Available</span></div>
-              <h3>Room 402</h3>
-              <p>Building D <span>·</span> 4th Floor</p>
-              <small>Next open slot <strong>1:00 PM–4:00 PM</strong></small>
-            </article>
-          </div>
+          <div class="room-cards" id="dashboardAvailabilityCards"></div>
+          <p class="schedule-empty-message" id="dashboardAvailabilityEmpty">Availability data is loading.</p>
         </section>
       </main>
     </div>
-
     <script src="script.js"></script>
+    <script src="roomq-time.js"></script>
+    <script src="roomq-api.js"></script>
+    <script src="dashboard.js"></script>
   </body>
 </html>

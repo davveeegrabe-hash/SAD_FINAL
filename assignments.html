@@ -23,10 +23,10 @@
         <nav class="sidebar-nav" aria-label="Main navigation">
           <a href="index.html" class="nav-item"><span class="nav-icon">◫</span>Dashboard</a>
           <a href="classrooms.html" class="nav-item"><span class="nav-icon">▣</span>Classrooms</a>
-          <a href="#" class="nav-item"><span class="nav-icon">▤</span>Schedules</a>
+          <a href="schedules.html" class="nav-item"><span class="nav-icon">▤</span>Schedules</a>
           <a href="assignments.html" class="nav-item active" aria-current="page"><span class="nav-icon">◍</span>Assignments</a>
-          <a href="#" class="nav-item"><span class="nav-icon">◌</span>Availability</a>
-          <a href="#" class="nav-item"><span class="nav-icon">⚑</span>Conflicts</a>
+          <a href="classrooms.html" class="nav-item"><span class="nav-icon">◌</span>Availability</a>
+          <a href="conflicts.html" class="nav-item"><span class="nav-icon">⚑</span>Conflicts</a>
         </nav>
 
         <div class="profile-box">
@@ -50,7 +50,11 @@
         <section class="assignment-intro" aria-labelledby="assignmentIntroHeading">
           <p class="panel-kicker">Room use management</p>
           <h2 id="assignmentIntroHeading">Schedule a room for a date and time.</h2>
-          <p>Saved assignments update room availability in the Classroom Explorer.</p>
+          <p>Reservations and class schedules share the same database and availability checks.</p>
+        </section>
+
+        <section class="panel assignment-auth-panel" aria-label="Administrator sign in">
+          <div id="adminSessionPanel"></div>
         </section>
 
         <div class="assignment-layout">
@@ -116,7 +120,7 @@
               <p id="assignmentFeedback" class="assignment-feedback" role="status"></p>
             </form>
 
-            <p class="storage-scope-note">Assignments are stored in this browser only and are not shared across devices.</p>
+            <p class="storage-scope-note">Room reservations are stored centrally and checked against class schedules.</p>
           </section>
 
           <div class="assignment-right-column">
@@ -165,6 +169,8 @@
     </div>
     <script src="script.js"></script>
     <script src="roomq-time.js"></script>
+    <script src="roomq-data.js"></script>
+    <script src="roomq-api.js"></script>
     <script src="classroom-explorer.js"></script>
     <script src="assignments.js"></script>
   </body>

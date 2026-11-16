@@ -1,217 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const sourceWidth = 415;
-  const sourceHeight = 562;
-  const floor = (id, label, crop, regions, staffRooms = [], roomOverrides = {}) => ({
-    id,
-    label,
-    crop: { x: crop[0], y: crop[1], width: crop[2], height: crop[3] },
-    regions: regions.map(([x, y, width, height], index) => ({
-      id: `${id}-region-${index + 1}`,
-      x,
-      y,
-      width,
-      height,
-      ...(roomOverrides[index] || {})
-    })),
-    staffRooms: staffRooms.map(([x, y, width, height]) => ({ x, y, width, height }))
-  });
-
-  // Coordinates match the blue and green blocks in the supplied, unchanged layout image.
-  const buildings = [
-    {
-      id: 'cas',
-      name: 'CAS Building',
-      floors: [
-        {
-          ...floor('3', '3rd Floor', [8, 34, 140, 53], [
-            [34, 43, 16, 14], [52, 43, 16, 14], [71, 43, 15, 14],
-            [89, 43, 15, 14], [107, 43, 15, 14], [125, 43, 16, 14],
-            [16, 66, 34, 13], [52, 66, 16, 13], [89, 66, 15, 13],
-            [107, 66, 15, 13], [125, 66, 16, 13]
-          ], [
-            [16, 43, 15, 14]
-          ], {
-            6: { roomNumber: null, name: 'Speech Lab' },
-            7: { roomNumber: 310 },
-            9: { roomNumber: 308 },
-            10: { roomNumber: 307 }
-          })
-        },
-        {
-          ...floor('4', '4th Floor', [8, 88, 140, 55], [
-            [16, 116, 34, 13], [52, 116, 34, 13],
-            [89, 116, 34, 13], [125, 116, 16, 13]
-          ], [
-            [16, 93, 106, 14]
-          ], {
-            0: { name: 'IRS Main' },
-            1: { name: 'Skylab 2' },
-            2: { name: 'Sky Lab 1' },
-            3: { name: 'NORSU Development Center' }
-          })
-        }
-      ]
-    },
-    {
-      id: 'cba',
-      name: 'CBA Building',
-      floors: [
-        {
-          ...floor('1', '1st Floor', [5, 369, 143, 29], [
-            [109, 374, 29, 13]
-          ], [
-            [13, 374, 77, 13]
-          ])
-        },
-        {
-          ...floor('2', '2nd Floor', [5, 398, 143, 35], [
-            [63, 401, 34, 13], [13, 423, 22, 14],
-            [90, 423, 22, 14], [116, 423, 22, 14]
-          ], [
-            [13, 401, 47, 13], [100, 401, 38, 13], [39, 423, 22, 14]
-          ])
-        },
-        {
-          ...floor('3', '3rd Floor', [5, 436, 143, 51], [
-            [63, 444, 22, 13], [89, 444, 23, 13], [115, 444, 23, 13],
-            [13, 466, 22, 14], [39, 466, 22, 14],
-            [90, 466, 22, 14], [116, 466, 22, 14]
-          ], [
-            [13, 444, 47, 13]
-          ])
-        }
-      ]
-    },
-    {
-      id: 'cthm',
-      name: 'CTHM Building',
-      floors: [
-        {
-          ...floor('1', '1st Floor', [8, 197, 140, 31], [
-            [16, 203, 106, 13]
-          ], [
-            [125, 203, 16, 13]
-          ])
-        },
-        {
-          ...floor('2', '2nd Floor', [8, 232, 140, 31], [
-            [37, 239, 18, 13], [59, 239, 18, 13],
-            [80, 239, 18, 13], [101, 239, 19, 14]
-          ], [
-            [16, 239, 18, 13]
-          ])
-        },
-        {
-          ...floor('3', '3rd Floor', [8, 266, 140, 31], [
-            [16, 272, 13, 13], [32, 272, 13, 13],
-            [48, 272, 13, 13], [64, 272, 13, 13],
-            [80, 272, 13, 13], [96, 272, 13, 13],
-            [111, 272, 14, 13], [127, 272, 14, 13]
-          ])
-        }
-      ]
-    },
-    {
-      id: 'cnpahs',
-      name: 'CNPAHS Building',
-      floors: [
-        {
-          ...floor('1', '1st Floor', [233, 30, 140, 39], [
-            [238, 38, 34, 13], [275, 38, 34, 13],
-            [311, 38, 34, 13], [348, 38, 15, 13]
-          ])
-        },
-        {
-          ...floor('2', '2nd Floor', [233, 72, 140, 33], [
-            [238, 80, 16, 14], [257, 80, 15, 14], [275, 80, 15, 14],
-            [293, 80, 16, 14], [330, 80, 15, 14]
-          ], [
-            [348, 80, 15, 14]
-          ])
-        },
-        {
-          ...floor('3', '3rd Floor', [233, 107, 140, 32], [
-            [238, 115, 28, 13], [269, 115, 28, 13],
-            [300, 115, 28, 13], [348, 115, 15, 13]
-          ])
-        }
-      ]
-    },
-    {
-      id: 'cit',
-      name: 'CIT Building',
-      floors: [
-        {
-          ...floor('1', '1st Floor', [233, 262, 142, 48], [
-            [239, 267, 9, 13], [250, 267, 8, 13], [260, 267, 9, 13],
-            [271, 267, 8, 13], [281, 267, 9, 13], [292, 267, 8, 13],
-            [303, 267, 7, 14], [326, 267, 8, 13], [335, 267, 8, 13],
-            [345, 267, 7, 13], [354, 267, 8, 13], [354, 289, 8, 13]
-          ])
-        },
-        {
-          ...floor('2', '2nd Floor', [233, 195, 142, 63], [
-            [239, 199, 11, 13], [252, 199, 10, 13], [265, 199, 10, 13],
-            [277, 199, 11, 13], [290, 199, 10, 13], [303, 199, 10, 13],
-            [326, 199, 8, 13], [335, 199, 8, 13], [345, 199, 7, 13],
-            [354, 199, 8, 13], [253, 225, 11, 13], [336, 241, 27, 13]
-          ], [
-            [237, 241, 27, 13]
-          ])
-        }
-      ]
-    },
-    {
-      id: 'st',
-      name: 'ST Building',
-      floors: [
-        {
-          ...floor('1', '1st Floor', [234, 342, 141, 27], [
-            [272, 352, 28, 13], [304, 352, 28, 13]
-          ], [
-            [241, 352, 27, 13], [336, 352, 28, 13]
-          ])
-        },
-        {
-          ...floor('2', '2nd Floor', [234, 370, 141, 22], [
-            [241, 374, 28, 13], [273, 374, 28, 13], [305, 374, 27, 13]
-          ], [
-            [337, 374, 27, 13]
-          ])
-        },
-        {
-          ...floor('3', '3rd Floor', [234, 394, 141, 20], [
-            [241, 395, 22, 14], [266, 395, 22, 14], [292, 395, 21, 14],
-            [317, 395, 22, 14], [342, 395, 22, 14]
-          ])
-        },
-        {
-          ...floor('4', '4th Floor', [234, 414, 141, 20], [
-            [241, 417, 22, 14], [267, 417, 21, 14], [292, 417, 22, 14],
-            [317, 417, 22, 14], [342, 417, 22, 14]
-          ])
-        }
-      ]
-    },
-    {
-      id: 'cted',
-      name: 'CTED Building',
-      floors: [
-        {
-          ...floor('2', '2nd Floor', [234, 483, 141, 78], [
-            [275, 494, 28, 14], [307, 494, 27, 14],
-            [338, 494, 28, 14], [243, 512, 28, 14], [243, 530, 27, 13]
-          ], [
-            [244, 494, 27, 14]
-          ])
-        }
-      ]
-    }
-  ];
-
-  window.RoomQ = window.RoomQ || {};
-  window.RoomQ.buildings = buildings;
-  window.RoomQ.floorPlanSource = { width: sourceWidth, height: sourceHeight };
+  const { buildings, floorPlanSource } = window.RoomQ;
+  const sourceWidth = floorPlanSource.width;
+  const sourceHeight = floorPlanSource.height;
   if (!document.getElementById('buildingSelector')) {
     return;
   }
@@ -233,12 +23,37 @@ document.addEventListener('DOMContentLoaded', () => {
   const roomSelectionDescription = document.getElementById('roomSelectionDescription');
   const scheduleEmpty = document.getElementById('scheduleEmpty');
   const availabilityDate = document.getElementById('availabilityDate');
-  const availabilityTime = document.getElementById('availabilityTime');
-  const availabilityTimePicker = window.RoomQTime.attach(
-    document.getElementById('availabilityTimePicker'),
-    availabilityTime
+  const availabilityStart = document.getElementById('availabilityStart');
+  const availabilityEnd = document.getElementById('availabilityEnd');
+  const availabilityStartPicker = window.RoomQTime.attach(
+    document.getElementById('availabilityStartPicker'),
+    availabilityStart
+  );
+  const availabilityEndPicker = window.RoomQTime.attach(
+    document.getElementById('availabilityEndPicker'),
+    availabilityEnd
   );
   const availabilityNote = document.getElementById('availabilityNote');
+  const availabilitySearch = document.getElementById('availabilitySearch');
+  const viewFullScheduleLink = document.getElementById('viewFullScheduleLink');
+  const roomBookingPanel = document.getElementById('roomBookingPanel');
+  const roomBookingRoom = document.getElementById('roomBookingRoom');
+  const roomBookingForm = document.getElementById('roomBookingForm');
+  const roomBookingDate = document.getElementById('roomBookingDate');
+  const roomBookingStart = document.getElementById('roomBookingStart');
+  const roomBookingEnd = document.getElementById('roomBookingEnd');
+  const roomBookingFeedback = document.getElementById('roomBookingFeedback');
+  const roomBookingSubmit = document.getElementById('roomBookingSubmit');
+  const roomBookingAuthPanel = document.getElementById('roomBookingAuthPanel');
+  const roomBookingAuthNote = document.getElementById('roomBookingAuthNote');
+  const roomBookingStartPicker = window.RoomQTime.attach(
+    document.getElementById('roomBookingStartPicker'),
+    roomBookingStart
+  );
+  const roomBookingEndPicker = window.RoomQTime.attach(
+    document.getElementById('roomBookingEndPicker'),
+    roomBookingEnd
+  );
   const floorPlanCanvas = document.getElementById('floorPlanCanvas');
   const planStage = document.getElementById('planStage');
   const planSourceLayer = document.getElementById('planSourceLayer');
@@ -249,18 +64,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const zoomInButton = document.getElementById('zoomInButton');
   const fitPlanButton = document.getElementById('fitPlanButton');
 
-  const roomUseStorageKey = 'roomq.roomUsage.v1';
   let currentBuilding = null;
   let currentFloor = null;
   let selectedRegionId = null;
-  let roomUseRecords = [];
-  let roomUseStorageReady = true;
+  let availabilityRecords = [];
+  let scheduleRecords = [];
+  let availabilityError = '';
+  let availabilityRequestId = 0;
+  let bookingAuthenticated = false;
   let fitScale = 1;
   let zoom = 1;
   let panX = 0;
   let panY = 0;
   let dragState = null;
 
+  buildingSelector.append(new Option('All buildings', 'all'));
   for (const building of buildings) {
     const option = document.createElement('option');
     option.value = building.id;
@@ -274,70 +92,40 @@ document.addEventListener('DOMContentLoaded', () => {
     .slice(0, 10);
   const now = new Date();
   availabilityDate.value = localDate;
-  availabilityTime.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  availabilityTimePicker.setValue(availabilityTime.value);
-  roomUseRecords = loadRoomUseRecords();
+  let startTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const endDate = new Date(now.getTime() + 60 * 60000);
+  let endTime = `${String(endDate.getHours()).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
+  if (endDate.toDateString() !== now.toDateString()) {
+    endTime = '23:59';
+    if (startTime >= endTime) {
+      startTime = '22:59';
+    }
+  }
+  availabilityStartPicker.setValue(startTime);
+  availabilityEndPicker.setValue(endTime);
+
+  function getBuilding(id) {
+    return buildings.find((building) => building.id === id);
+  }
 
   function getSelectedBuilding() {
-    return buildings.find((building) => building.id === buildingSelector.value);
+    return getBuilding(buildingSelector.value);
   }
 
-  function isValidRoomUseRecord(record) {
-    return Boolean(
-      record &&
-      typeof record === 'object' &&
-      typeof record.id === 'string' &&
-      typeof record.buildingId === 'string' &&
-      typeof record.floorId === 'string' &&
-      typeof record.regionId === 'string' &&
-      typeof record.roomLabel === 'string' &&
-      (record.roomNumber === null || Number.isInteger(record.roomNumber)) &&
-      /^\d{4}-\d{2}-\d{2}$/.test(record.date) &&
-      /^\d{2}:\d{2}$/.test(record.startTime) &&
-      /^\d{2}:\d{2}$/.test(record.endTime) &&
-      record.startTime < record.endTime
-    );
-  }
-
-  function loadRoomUseRecords() {
-    roomUseStorageReady = true;
-    try {
-      const savedRecords = window.localStorage.getItem(roomUseStorageKey);
-      if (savedRecords === null) {
-        return [];
-      }
-
-      const parsedRecords = JSON.parse(savedRecords);
-      if (!Array.isArray(parsedRecords) || parsedRecords.some((record) => !isValidRoomUseRecord(record))) {
-        throw new Error('Saved room-use data has an invalid format.');
-      }
-      return parsedRecords;
-    } catch (error) {
-      roomUseStorageReady = false;
-      console.error('Unable to load saved room-use data.', error);
-      return [];
-    }
-  }
-
-  function findRoomUse(regionId, date = availabilityDate.value, time = availabilityTime.value) {
-    if (!currentBuilding || !currentFloor || !date || !time) {
-      return null;
-    }
-
-    return roomUseRecords.find((record) =>
-      record.buildingId === currentBuilding.id &&
-      record.floorId === currentFloor.id &&
-      record.regionId === regionId &&
-      record.date === date &&
-      record.startTime <= time &&
-      time < record.endTime
+  function getRoomAvailability(regionId) {
+    return availabilityRecords.find((record) =>
+      record.buildingId === currentBuilding?.id &&
+      record.floorId === currentFloor?.id &&
+      record.regionId === regionId
     ) || null;
   }
 
   function setStatusClasses(element, status) {
     element.classList.toggle('is-available', status === 'available');
-    element.classList.toggle('is-unavailable', status === 'unavailable');
+    element.classList.toggle('is-unavailable', status === 'occupied' || status === 'reserved');
     element.classList.toggle('is-unknown', status === 'unknown');
+    element.classList.toggle('is-reserved', status === 'reserved');
+    element.dataset.status = status;
   }
 
   function updateSelectedRoomStatus() {
@@ -350,74 +138,92 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const usage = findRoomUse(region.id);
-    const hasDateAndTime = Boolean(availabilityDate.value && availabilityTime.value);
-    const status = !roomUseStorageReady || !hasDateAndTime
-      ? 'unknown'
-      : usage
-        ? 'unavailable'
-        : 'available';
-
-    if (status === 'unavailable') {
-      detailsStatus.textContent = `Not available · in use until ${window.RoomQTime.format(usage.endTime)}`;
-    } else if (status === 'available') {
-      detailsStatus.textContent = `Available at ${window.RoomQTime.format(availabilityTime.value)}`;
-    } else {
-      detailsStatus.textContent = 'Availability could not be checked';
-    }
+    const room = getRoomAvailability(region.id);
+    const status = availabilityError || !room ? 'unknown' : room.status;
+    detailsStatus.textContent = status === 'available'
+      ? 'Available during the selected period'
+      : status === 'occupied'
+        ? 'Occupied during the selected period'
+        : status === 'reserved'
+          ? 'Reserved during the selected period'
+          : 'Availability could not be checked';
     setStatusClasses(detailsStatus, status);
     setStatusClasses(detailsStatusDot, status);
   }
 
   function updateAvailabilityNote() {
-    if (!currentFloor) {
-      availabilityNote.textContent = 'Select a building with a mapped floor to check room availability.';
-      return;
-    }
-
-    const hasDateAndTime = Boolean(availabilityDate.value && availabilityTime.value);
-    let unavailableCount = 0;
     roomOverlayLayer.querySelectorAll('.classroom-region-overlay').forEach((overlay) => {
-      const usage = hasDateAndTime && roomUseStorageReady
-        ? findRoomUse(overlay.dataset.regionId)
-        : null;
-      const status = !roomUseStorageReady || !hasDateAndTime
-        ? 'unknown'
-        : usage
-          ? 'unavailable'
-          : 'available';
-
+      const room = getRoomAvailability(overlay.dataset.regionId);
+      const status = availabilityError || !room ? 'unknown' : room.status;
       setStatusClasses(overlay, status);
-      if (status !== 'available') {
-        unavailableCount += 1;
-      }
-
-      const statusLabel = status === 'unavailable'
-        ? `Not available at ${window.RoomQTime.format(availabilityTime.value)}`
-        : status === 'available'
-          ? `Available at ${window.RoomQTime.format(availabilityTime.value)}`
-          : 'Availability could not be checked';
+      const statusLabel = status === 'available'
+        ? 'Available'
+        : status === 'occupied'
+          ? 'Occupied'
+          : status === 'reserved'
+            ? 'Reserved'
+            : 'Availability unknown';
       overlay.title = `${overlay.dataset.roomTitle} · ${statusLabel}`;
       overlay.setAttribute('aria-label', `${overlay.dataset.roomTitle}; ${statusLabel}`);
     });
-
-    if (!hasDateAndTime) {
-      availabilityNote.textContent = 'Choose a date and time to check room availability.';
-    } else if (!roomUseStorageReady) {
-      availabilityNote.textContent = 'Room-use data could not be read; availability cannot be checked.';
+    if (availabilityError) {
+      availabilityNote.textContent = availabilityError;
+    } else if (!availabilityRecords.length) {
+      availabilityNote.textContent = 'No mapped classrooms match the selected building and floor.';
     } else {
-      const date = new Date(`${availabilityDate.value}T00:00:00`);
-      const dateLabel = new Intl.DateTimeFormat('en', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      }).format(date);
-      availabilityNote.textContent = unavailableCount === 0
-        ? `All ${currentFloor.regions.length} rooms are available on ${dateLabel} at ${window.RoomQTime.format(availabilityTime.value)}.`
-        : `${unavailableCount} ${unavailableCount === 1 ? 'room is' : 'rooms are'} not available on ${dateLabel} at ${window.RoomQTime.format(availabilityTime.value)}. Gray rooms are occupied.`;
+      availabilityNote.textContent = `${availabilityRecords.length} classrooms checked for ${availabilityDate.value}, ${window.RoomQTime.format(availabilityStart.value)}–${window.RoomQTime.format(availabilityEnd.value)}.`;
     }
-
     updateSelectedRoomStatus();
+  }
+
+  async function searchAvailability() {
+    const requestId = ++availabilityRequestId;
+    if (!availabilityDate.value || !availabilityStart.value || !availabilityEnd.value ||
+        availabilityStart.value >= availabilityEnd.value) {
+      availabilityError = 'Choose a valid date and ensure the end time is later than the start time.';
+      availabilityRecords = [];
+      scheduleRecords = [];
+      availabilitySearch.disabled = false;
+      updateAvailabilityNote();
+      return;
+    }
+    availabilitySearch.disabled = true;
+    availabilityNote.textContent = 'Checking classroom schedules…';
+    const params = new URLSearchParams({
+      date: availabilityDate.value,
+      startTime: availabilityStart.value,
+      endTime: availabilityEnd.value
+    });
+    if (buildingSelector.value !== 'all') {
+      params.set('buildingId', buildingSelector.value);
+    }
+    if (floorSelector.value && !floorSelector.disabled) {
+      params.set('floorId', floorSelector.value);
+    }
+    try {
+      const [nextAvailability, nextSchedules] = await Promise.all([
+        window.RoomQApi.request(`/api/availability?${params}`),
+        window.RoomQApi.request('/api/schedules')
+      ]);
+      if (requestId !== availabilityRequestId) {
+        return;
+      }
+      availabilityRecords = nextAvailability;
+      scheduleRecords = nextSchedules;
+      availabilityError = '';
+    } catch (error) {
+      if (requestId !== availabilityRequestId) {
+        return;
+      }
+      availabilityRecords = [];
+      scheduleRecords = [];
+      availabilityError = `Availability could not be checked: ${error.message}`;
+    } finally {
+      if (requestId === availabilityRequestId) {
+        availabilitySearch.disabled = false;
+        updateAvailabilityNote();
+      }
+    }
   }
 
   function updateTransform() {
@@ -481,12 +287,14 @@ document.addEventListener('DOMContentLoaded', () => {
     detailsBuilding.textContent = building.name;
     detailsFloor.textContent = currentFloor ? currentFloor.label : 'Not available';
     detailsCategory.textContent = '—';
-    detailsCapacity.textContent = 'Not connected';
-    detailsFacilities.textContent = 'Not connected';
+    detailsCapacity.textContent = 'Not recorded';
+    detailsFacilities.textContent = 'Not recorded';
     detailsStatus.textContent = 'Select a room to check availability';
     setStatusClasses(detailsStatus, 'unknown');
     setStatusClasses(detailsStatusDot, 'unknown');
-    scheduleEmpty.textContent = 'Select a room to view saved use times.';
+    scheduleEmpty.textContent = 'Select a room to view its schedule.';
+    roomBookingPanel.hidden = true;
+    roomBookingFeedback.textContent = '';
   }
 
   function getRoomNumber(index, region) {
@@ -499,25 +307,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderSelectedRoomSchedule(region) {
     scheduleEmpty.replaceChildren();
-    const records = roomUseRecords
-      .filter((record) =>
-        record.buildingId === currentBuilding.id &&
-        record.floorId === currentFloor.id &&
-        record.regionId === region.id
-      )
+    const room = getRoomAvailability(region.id);
+    const records = scheduleRecords
+      .filter((record) => room && record.classroomId === room.id)
       .sort((left, right) =>
-        left.date.localeCompare(right.date) || left.startTime.localeCompare(right.startTime)
+        (left.date || left.startDate).localeCompare(right.date || right.startDate) ||
+        left.startTime.localeCompare(right.startTime)
       );
 
     if (!records.length) {
-      scheduleEmpty.textContent = 'No room-use times are saved for this room in this browser.';
+      scheduleEmpty.textContent = 'No schedules are recorded for this classroom.';
       return;
     }
 
     records.forEach((record) => {
       const entry = document.createElement('p');
       entry.className = 'room-use-schedule-entry';
-      entry.textContent = `${record.date} · ${window.RoomQTime.format(record.startTime)}–${window.RoomQTime.format(record.endTime)}`;
+      const days = record.recurrence === 'weekly'
+        ? record.daysOfWeek.map((day) => ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]).join(', ')
+        : record.date;
+      const title = record.kind === 'reservation'
+        ? 'Room reservation'
+        : `${record.course} · ${record.section}`;
+      entry.textContent = `${days} · ${title} · ${window.RoomQTime.format(record.startTime)}–${window.RoomQTime.format(record.endTime)}`;
       scheduleEmpty.append(entry);
     });
   }
@@ -533,16 +345,101 @@ document.addEventListener('DOMContentLoaded', () => {
       ? (roomNumber === null ? region.name : `Room ${roomNumber} · ${region.name}`)
       : `Room ${roomNumber}`;
     selectedRoomName.textContent = roomName;
+    roomBookingPanel.hidden = false;
+    roomBookingRoom.textContent = `${currentBuilding.name} · ${currentFloor.label} · ${roomName}`;
+    roomBookingDate.value = availabilityDate.value || localDate;
+    roomBookingStartPicker.setValue(availabilityStart.value);
+    roomBookingEndPicker.setValue(availabilityEnd.value);
+    roomBookingFeedback.textContent = '';
+    roomBookingFeedback.classList.remove('is-error');
     roomSelectionDescription.textContent = region.name
       ? 'Named room on the selected floor plan.'
       : "Numbered by the selected floor's convention.";
     detailsBuilding.textContent = currentBuilding.name;
     detailsFloor.textContent = currentFloor.label;
-    detailsCategory.textContent = 'Available room (source plan)';
-    detailsCapacity.textContent = 'Not connected';
-    detailsFacilities.textContent = 'Not connected';
+    const scheduleQuery = new URLSearchParams({
+      building: currentBuilding.id,
+      floor: currentFloor.id,
+      room: `${currentBuilding.id}-${currentFloor.id}-${region.id}`
+    });
+    viewFullScheduleLink.href = `schedules.html?${scheduleQuery}`;
+    const room = getRoomAvailability(region.id);
+    detailsCategory.textContent = region.name ? 'Named classroom' : 'Classroom';
+    detailsCapacity.textContent = room && room.capacity !== null
+      ? String(room.capacity)
+      : 'Not recorded';
+    detailsFacilities.textContent = room && room.facilities.length
+      ? room.facilities.join(', ')
+      : 'Not recorded';
     renderSelectedRoomSchedule(region);
     updateSelectedRoomStatus();
+  }
+
+  async function saveRoomBooking(event) {
+    event.preventDefault();
+    if (!bookingAuthenticated) {
+      roomBookingFeedback.textContent = 'Sign in as an administrator before booking a room.';
+      roomBookingFeedback.classList.add('is-error');
+      return;
+    }
+
+    const building = currentBuilding;
+    const floor = currentFloor;
+    const region = floor && floor.regions.find((item) => item.id === selectedRegionId);
+    if (!building || !floor || !region) {
+      roomBookingFeedback.textContent = 'Select a classroom before booking.';
+      roomBookingFeedback.classList.add('is-error');
+      return;
+    }
+    if (!roomBookingDate.value || !roomBookingStart.value || !roomBookingEnd.value) {
+      roomBookingFeedback.textContent = 'Choose a date and both booking times.';
+      roomBookingFeedback.classList.add('is-error');
+      return;
+    }
+    if (roomBookingStart.value >= roomBookingEnd.value) {
+      roomBookingFeedback.textContent = 'The end time must be later than the start time.';
+      roomBookingFeedback.classList.add('is-error');
+      return;
+    }
+
+    const regionIndex = floor.regions.indexOf(region);
+    const roomNumber = getRoomNumber(regionIndex, region);
+    const roomName = region.name
+      ? (roomNumber === null ? region.name : `Room ${roomNumber} · ${region.name}`)
+      : `Room ${roomNumber}`;
+    const buildingId = building.id;
+    const floorId = floor.id;
+    roomBookingSubmit.disabled = true;
+    roomBookingFeedback.textContent = 'Saving reservation…';
+    roomBookingFeedback.classList.remove('is-error');
+    try {
+      await window.RoomQApi.request('/api/schedules', {
+        method: 'POST',
+        body: JSON.stringify({
+          kind: 'reservation',
+          classroomId: `${buildingId}-${floorId}-${region.id}`,
+          recurrence: 'once',
+          date: roomBookingDate.value,
+          startTime: roomBookingStart.value,
+          endTime: roomBookingEnd.value
+        })
+      });
+      roomBookingFeedback.textContent = `Booked ${roomName} for ${roomBookingDate.value}, ${window.RoomQTime.format(roomBookingStart.value)}–${window.RoomQTime.format(roomBookingEnd.value)}.`;
+      await searchAvailability();
+      if (currentBuilding?.id === buildingId &&
+          currentFloor?.id === floorId &&
+          selectedRegionId === region.id) {
+        renderSelectedRoomSchedule(region);
+      }
+    } catch (error) {
+      const overlap = error.conflict && error.conflict.overlapPeriod;
+      roomBookingFeedback.textContent = overlap
+        ? `Room conflict from ${window.RoomQTime.format(overlap.startTime)} to ${window.RoomQTime.format(overlap.endTime)}. No reservation was saved.`
+        : error.message;
+      roomBookingFeedback.classList.add('is-error');
+    } finally {
+      roomBookingSubmit.disabled = !bookingAuthenticated;
+    }
   }
 
   function renderFloor(resetView) {
@@ -612,6 +509,8 @@ document.addEventListener('DOMContentLoaded', () => {
         `${currentBuilding.name}, ${currentFloor.label}, ${roomName}; capacity and schedule data unavailable`
       );
       overlay.title = `${roomName} · ${currentBuilding.name} · ${currentFloor.label}`;
+      const room = getRoomAvailability(region.id);
+      setStatusClasses(overlay, room ? room.status : 'unknown');
       overlay.classList.toggle('is-selected', selectedRegionId === region.id);
       overlay.addEventListener('click', () => selectRegion(region, index));
       roomOverlayLayer.append(overlay);
@@ -623,7 +522,24 @@ document.addEventListener('DOMContentLoaded', () => {
     updateAvailabilityNote();
   }
 
-  function updateBuilding() {
+  function updateBuilding(preferredFloorId) {
+    if (buildingSelector.value === 'all') {
+      currentBuilding = null;
+      currentFloor = null;
+      selectedRegionId = null;
+      roomOverlayLayer.replaceChildren();
+      planStage.hidden = true;
+      floorPlanEmpty.hidden = false;
+      floorPlanHeading.textContent = 'All buildings';
+      layoutEmptyTitle.textContent = 'Select a building to view its floor plan';
+      layoutEmptyCopy.textContent = 'Availability results can include all mapped buildings. Choose one building to view its actual mapped floor plan.';
+      canvasCaption.lastChild.textContent = 'Choose a building to display its floor plan';
+      floorSelector.replaceChildren(new Option('Select a building first', ''));
+      floorSelector.disabled = true;
+      resetRoomDetails({ name: 'All buildings' });
+      searchAvailability();
+      return;
+    }
     const building = getSelectedBuilding();
     if (!building) {
       return;
@@ -635,11 +551,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!currentFloor) {
       showNoLayout(building);
+      searchAvailability();
       return;
+    }
+    if (preferredFloorId && building.floors.some((floor) => floor.id === preferredFloorId)) {
+      currentFloor = building.floors.find((floor) => floor.id === preferredFloorId);
+      floorSelector.value = currentFloor.id;
     }
 
     resetRoomDetails(building);
     renderFloor(true);
+    searchAvailability();
   }
 
   function updateFloor() {
@@ -648,6 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
     renderFloor(true);
+    searchAvailability();
   }
 
   function setZoom(value) {
@@ -657,8 +580,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   buildingSelector.addEventListener('change', updateBuilding);
   floorSelector.addEventListener('change', updateFloor);
-  availabilityDate.addEventListener('change', updateAvailabilityNote);
-  availabilityTime.addEventListener('change', updateAvailabilityNote);
+  availabilityDate.addEventListener('change', searchAvailability);
+  availabilityStart.addEventListener('change', searchAvailability);
+  availabilityEnd.addEventListener('change', searchAvailability);
+  availabilitySearch.addEventListener('click', searchAvailability);
+  roomBookingForm.addEventListener('submit', saveRoomBooking);
   zoomOutButton.addEventListener('click', () => setZoom(zoom - 0.25));
   zoomInButton.addEventListener('click', () => setZoom(zoom + 0.25));
   fitPlanButton.addEventListener('click', () => {
@@ -709,21 +635,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  window.addEventListener('storage', (event) => {
-    if (event.key !== roomUseStorageKey && event.key !== null) {
-      return;
-    }
-
-    roomUseRecords = loadRoomUseRecords();
-    updateAvailabilityNote();
-    if (selectedRegionId && currentFloor) {
-      const region = currentFloor.regions.find((item) => item.id === selectedRegionId);
-      if (region) {
-        renderSelectedRoomSchedule(region);
-      }
-    }
+  const query = new URLSearchParams(window.location.search);
+  const requestedBuilding = query.get('building');
+  if (requestedBuilding && (requestedBuilding === 'all' || getBuilding(requestedBuilding))) {
+    buildingSelector.value = requestedBuilding;
+  }
+  updateBuilding(query.get('floor') || undefined);
+  window.RoomQApi.mountAdminPanel(roomBookingAuthPanel, (user) => {
+    bookingAuthenticated = Boolean(user && user.role === 'admin');
+    roomBookingSubmit.disabled = !bookingAuthenticated;
+    roomBookingAuthNote.textContent = bookingAuthenticated
+      ? 'You are signed in and can confirm this reservation.'
+      : 'Sign in as an administrator to confirm this reservation.';
   });
-
-  updateAvailabilityNote();
-  updateBuilding();
+  const requestedRegion = query.get('room');
+  if (requestedRegion && currentFloor) {
+    const regionIndex = currentFloor.regions.findIndex((region) => region.id === requestedRegion);
+    if (regionIndex >= 0) {
+      selectRegion(currentFloor.regions[regionIndex], regionIndex);
+    }
+  }
 });
