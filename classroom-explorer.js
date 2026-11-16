@@ -36,7 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const availabilityNote = document.getElementById('availabilityNote');
   const availabilitySearch = document.getElementById('availabilitySearch');
   const viewFullScheduleLink = document.getElementById('viewFullScheduleLink');
-  const roomBookingPanel = document.getElementById('roomBookingPanel');
+  const roomBookingDialog = document.getElementById('roomBookingDialog');
+  const roomBookingCancel = document.getElementById('roomBookingCancel');
   const roomBookingRoom = document.getElementById('roomBookingRoom');
   const roomBookingForm = document.getElementById('roomBookingForm');
   const roomBookingDate = document.getElementById('roomBookingDate');
@@ -46,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const roomBookingSubmit = document.getElementById('roomBookingSubmit');
   const roomBookingAuthPanel = document.getElementById('roomBookingAuthPanel');
   const roomBookingAuthNote = document.getElementById('roomBookingAuthNote');
+  const roomBookingLoginLink = document.getElementById('roomBookingLoginLink');
   const roomBookingStartPicker = window.RoomQTime.attach(
     document.getElementById('roomBookingStartPicker'),
     roomBookingStart
@@ -293,7 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setStatusClasses(detailsStatus, 'unknown');
     setStatusClasses(detailsStatusDot, 'unknown');
     scheduleEmpty.textContent = 'Select a room to view its schedule.';
-    roomBookingPanel.hidden = true;
+    if (roomBookingDialog.open) {
+      roomBookingDialog.close();
+    }
     roomBookingFeedback.textContent = '';
   }
 
@@ -345,8 +349,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ? (roomNumber === null ? region.name : `Room ${roomNumber} · ${region.name}`)
       : `Room ${roomNumber}`;
     selectedRoomName.textContent = roomName;
-    roomBookingPanel.hidden = false;
+    if (!roomBookingDialog.open) {
+      roomBookingDialog.showModal();
+    }
     roomBookingRoom.textContent = `${currentBuilding.name} · ${currentFloor.label} · ${roomName}`;
+    const returnParams = new URLSearchParams({
+      building: currentBuilding.id,
+      floor: currentFloor.id,
+      room: region.id
+    });
+    roomBookingLoginLink.href = `login.html?returnTo=${encodeURIComponent(`classrooms.html?${returnParams}`)}`;
     roomBookingDate.value = availabilityDate.value || localDate;
     roomBookingStartPicker.setValue(availabilityStart.value);
     roomBookingEndPicker.setValue(availabilityEnd.value);
@@ -378,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function saveRoomBooking(event) {
     event.preventDefault();
     if (!bookingAuthenticated) {
-      roomBookingFeedback.textContent = 'Sign in as an administrator before booking a room.';
+      roomBookingFeedback.textContent = 'Sign in before booking a room.';
       roomBookingFeedback.classList.add('is-error');
       return;
     }
@@ -585,6 +597,12 @@ document.addEventListener('DOMContentLoaded', () => {
   availabilityEnd.addEventListener('change', searchAvailability);
   availabilitySearch.addEventListener('click', searchAvailability);
   roomBookingForm.addEventListener('submit', saveRoomBooking);
+  roomBookingCancel.addEventListener('click', () => roomBookingDialog.close());
+  roomBookingDialog.addEventListener('click', (event) => {
+    if (event.target === roomBookingDialog) {
+      roomBookingDialog.close();
+    }
+  });
   zoomOutButton.addEventListener('click', () => setZoom(zoom - 0.25));
   zoomInButton.addEventListener('click', () => setZoom(zoom + 0.25));
   fitPlanButton.addEventListener('click', () => {
@@ -642,11 +660,12 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   updateBuilding(query.get('floor') || undefined);
   window.RoomQApi.mountAdminPanel(roomBookingAuthPanel, (user) => {
-    bookingAuthenticated = Boolean(user && user.role === 'admin');
+    bookingAuthenticated = Boolean(user && ['admin', 'user'].includes(user.role));
     roomBookingSubmit.disabled = !bookingAuthenticated;
     roomBookingAuthNote.textContent = bookingAuthenticated
       ? 'You are signed in and can confirm this reservation.'
-      : 'Sign in as an administrator to confirm this reservation.';
+      : 'Sign in or create a user account to reserve this classroom.';
+    roomBookingLoginLink.hidden = Boolean(user);
   });
   const requestedRegion = query.get('room');
   if (requestedRegion && currentFloor) {

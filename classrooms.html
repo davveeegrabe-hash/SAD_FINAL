@@ -26,6 +26,7 @@
           <a href="schedules.html" class="nav-item"><span class="nav-icon">▤</span>Schedules</a>
           <a href="assignments.html" class="nav-item"><span class="nav-icon">◍</span>Assignments</a>
           <a href="#availabilitySearch" class="nav-item"><span class="nav-icon">◌</span>Availability</a>
+          <a href="login.html" class="nav-item"><span class="nav-icon">↪</span>Sign in</a>
           <a href="conflicts.html" class="nav-item"><span class="nav-icon">⚑</span>Conflicts</a>
         </nav>
 
@@ -185,51 +186,6 @@
               <span class="status-pending-dot" id="detailsStatusDot"></span>
             </div>
 
-            <section class="room-booking-panel" id="roomBookingPanel" aria-labelledby="roomBookingHeading" hidden>
-              <div class="room-booking-header">
-                <p class="panel-kicker">Room reservation</p>
-                <h3 id="roomBookingHeading">Book this classroom</h3>
-                <p id="roomBookingRoom"></p>
-              </div>
-
-              <form id="roomBookingForm" class="room-booking-form">
-                <label class="assignment-field">
-                  <span>Date</span>
-                  <input id="roomBookingDate" type="date" required />
-                </label>
-
-                <fieldset class="assignment-time-field">
-                  <legend>From</legend>
-                  <div class="time-picker-controls" id="roomBookingStartPicker">
-                    <select data-time-hour aria-label="Booking start hour" required></select>
-                    <span aria-hidden="true">:</span>
-                    <select data-time-minute aria-label="Booking start minute" required></select>
-                    <select data-time-period aria-label="Booking start AM or PM" required></select>
-                  </div>
-                  <input type="hidden" id="roomBookingStart" />
-                </fieldset>
-
-                <fieldset class="assignment-time-field">
-                  <legend>Until</legend>
-                  <div class="time-picker-controls" id="roomBookingEndPicker">
-                    <select data-time-hour aria-label="Booking end hour" required></select>
-                    <span aria-hidden="true">:</span>
-                    <select data-time-minute aria-label="Booking end minute" required></select>
-                    <select data-time-period aria-label="Booking end AM or PM" required></select>
-                  </div>
-                  <input type="hidden" id="roomBookingEnd" />
-                </fieldset>
-
-                <button class="assignment-submit" id="roomBookingSubmit" type="submit" disabled>Book room</button>
-                <p id="roomBookingFeedback" class="assignment-feedback room-booking-feedback" role="status"></p>
-              </form>
-
-              <div class="room-booking-auth">
-                <p id="roomBookingAuthNote">Sign in as an administrator to confirm this reservation.</p>
-                <div id="roomBookingAuthPanel"></div>
-              </div>
-            </section>
-
             <section class="schedule-preview" aria-labelledby="scheduleHeading">
               <div class="schedule-preview-header">
                 <h3 id="scheduleHeading">Schedule</h3>
@@ -244,6 +200,56 @@
         </div>
 
       </main>
+      <dialog class="room-booking-dialog" id="roomBookingDialog" aria-labelledby="roomBookingHeading">
+        <section class="room-booking-panel">
+          <div class="room-booking-header">
+            <div>
+              <p class="panel-kicker">Room reservation</p>
+              <h2 id="roomBookingHeading">Book this classroom</h2>
+            </div>
+            <button class="room-booking-close" id="roomBookingCancel" type="button" aria-label="Close booking dialog">×</button>
+          </div>
+          <p id="roomBookingRoom" class="room-booking-room"></p>
+
+          <form id="roomBookingForm" class="room-booking-form">
+            <label class="assignment-field">
+              <span>Date</span>
+              <input id="roomBookingDate" type="date" required />
+            </label>
+
+            <fieldset class="assignment-time-field">
+              <legend>From</legend>
+              <div class="time-picker-controls" id="roomBookingStartPicker">
+                <select data-time-hour aria-label="Booking start hour" required></select>
+                <span aria-hidden="true">:</span>
+                <select data-time-minute aria-label="Booking start minute" required></select>
+                <select data-time-period aria-label="Booking start AM or PM" required></select>
+              </div>
+              <input type="hidden" id="roomBookingStart" />
+            </fieldset>
+
+            <fieldset class="assignment-time-field">
+              <legend>Until</legend>
+              <div class="time-picker-controls" id="roomBookingEndPicker">
+                <select data-time-hour aria-label="Booking end hour" required></select>
+                <span aria-hidden="true">:</span>
+                <select data-time-minute aria-label="Booking end minute" required></select>
+                <select data-time-period aria-label="Booking end AM or PM" required></select>
+              </div>
+              <input type="hidden" id="roomBookingEnd" />
+            </fieldset>
+
+            <button class="assignment-submit" id="roomBookingSubmit" type="submit" disabled>Book room</button>
+            <p id="roomBookingFeedback" class="assignment-feedback room-booking-feedback" role="status"></p>
+          </form>
+
+          <div class="room-booking-auth">
+            <p id="roomBookingAuthNote">Sign in as an administrator to confirm this reservation.</p>
+            <a class="room-booking-login-link" id="roomBookingLoginLink" href="login.html">Sign in or create a user account</a>
+            <div id="roomBookingAuthPanel"></div>
+          </div>
+        </section>
+      </dialog>
     </div>
     <script src="script.js"></script>
     <script src="roomq-time.js"></script>

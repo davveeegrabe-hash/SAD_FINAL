@@ -77,8 +77,13 @@ function verifyPassword(password, saltHex, hashHex) {
   return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 }
 
-function createServer({ database, root = __dirname }) {
+function createServer({
+  database,
+  root = __dirname,
+  adminSignupKey = process.env.ROOMQ_ADMIN_SIGNUP_KEY
+}) {
   const failedLogins = new Map();
+  const registrations = new Map();
   const resolvedRoot = path.resolve(root);
 
   function getCurrentUser(request) {
@@ -88,10 +93,66 @@ function createServer({ database, root = __dirname }) {
 
   function requireAdmin(request) {
     const user = getCurrentUser(request);
-    if (!user || user.role !== 'admin') {
+    if (!user) {
       throw requestError('Sign in with an administrator account to manage schedules.', 401);
     }
+    if (user.role !== 'admin') {
+      throw requestError('Only administrators can manage schedules.', 403);
+    }
     return user;
+  }
+
+  function createAuthenticatedSession(response, user) {
+    const token = crypto.randomBytes(32).toString('base64url');
+    database.createSession(user.id, hashToken(token), Date.now() + SESSION_TTL_MS);
+    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
+    sendJson(response, 200, {
+      authenticated: true,
+      user: { username: user.username, role: user.role }
+    }, {
+      'Set-Cookie': `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_MS / 1000}${secure}`
+    });
+  }
+
+  async function registerAccount(request, response, role) {
+    const body = await readJson(request);
+    const address = request.socket.remoteAddress || 'unknown';
+    const attempt = registrations.get(address) || { count: 0, resetAt: Date.now() + 15 * 60 * 1000 };
+    if (attempt.resetAt <= Date.now()) {
+      attempt.count = 0;
+      attempt.resetAt = Date.now() + 15 * 60 * 1000;
+    }
+    if (attempt.count >= 5) {
+      throw requestError('Too many account creation attempts. Try again later.', 429);
+    }
+    attempt.count += 1;
+    registrations.set(address, attempt);
+
+    if (role === 'admin') {
+      if (typeof adminSignupKey !== 'string' || adminSignupKey.length < 16) {
+        throw requestError('Admin sign-up is disabled. Configure ROOMQ_ADMIN_SIGNUP_KEY with at least 16 characters.', 503);
+      }
+      const providedKey = body && typeof body.setupKey === 'string' ? Buffer.from(body.setupKey) : Buffer.alloc(0);
+      const expectedKey = Buffer.from(adminSignupKey);
+      if (providedKey.length !== expectedKey.length ||
+          !crypto.timingSafeEqual(providedKey, expectedKey)) {
+        throw requestError('The administrator setup key is invalid.', 401);
+      }
+    }
+
+    const username = body && typeof body.username === 'string' ? body.username.trim() : '';
+    const password = body && typeof body.password === 'string' ? body.password : '';
+    if (!/^[A-Za-z0-9._-]{3,32}$/.test(username)) {
+      throw requestError('Username must be 3-32 characters using letters, numbers, dots, underscores, or hyphens.', 400);
+    }
+    if (password.length < 12 || password.length > 128) {
+      throw requestError('Password must be between 12 and 128 characters.', 400);
+    }
+    const user = database.createUser(username, password, role);
+    if (!user) {
+      throw requestError('That username is already in use.', 409);
+    }
+    createAuthenticatedSession(response, user);
   }
 
   function serveStatic(request, response, pathname) {
@@ -154,6 +215,14 @@ function createServer({ database, root = __dirname }) {
       });
       return;
     }
+    if (pathname === '/api/register' && method === 'POST') {
+      await registerAccount(request, response, 'user');
+      return;
+    }
+    if (pathname === '/api/register-admin' && method === 'POST') {
+      await registerAccount(request, response, 'admin');
+      return;
+    }
     if (pathname === '/api/login' && method === 'POST') {
       const body = await readJson(request);
       const address = request.socket.remoteAddress || 'unknown';
@@ -165,24 +234,20 @@ function createServer({ database, root = __dirname }) {
       if (attempt.count >= 10) {
         throw requestError('Too many sign-in attempts. Try again later.', 429);
       }
-      const username = typeof body.username === 'string' ? body.username.trim() : '';
-      const password = typeof body.password === 'string' ? body.password : '';
+      const username = body && typeof body.username === 'string' ? body.username.trim() : '';
+      const password = body && typeof body.password === 'string' ? body.password : '';
+      const role = body && typeof body.role === 'string' ? body.role : 'admin';
+      if (!['admin', 'user'].includes(role)) {
+        throw requestError('Choose an administrator or user account.', 400);
+      }
       const user = database.getUser(username);
-      if (!user || !verifyPassword(password, user.password_salt, user.password_hash)) {
+      if (!user || user.role !== role || !verifyPassword(password, user.password_salt, user.password_hash)) {
         attempt.count += 1;
         failedLogins.set(address, attempt);
         throw requestError('Username or password is incorrect.', 401);
       }
       failedLogins.delete(address);
-      const token = crypto.randomBytes(32).toString('base64url');
-      database.createSession(user.id, hashToken(token), Date.now() + SESSION_TTL_MS);
-      const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
-      sendJson(response, 200, {
-        authenticated: true,
-        user: { username: user.username, role: user.role }
-      }, {
-        'Set-Cookie': `${SESSION_COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL_MS / 1000}${secure}`
-      });
+      createAuthenticatedSession(response, user);
       return;
     }
     if (pathname === '/api/logout' && method === 'POST') {
@@ -230,8 +295,15 @@ function createServer({ database, root = __dirname }) {
       return;
     }
     if (pathname === '/api/schedules' && method === 'POST') {
-      requireAdmin(request);
-      const schedule = database.saveSchedule(await readJson(request));
+      const user = getCurrentUser(request);
+      if (!user) {
+        throw requestError('Sign in before creating a schedule or room reservation.', 401);
+      }
+      const body = await readJson(request);
+      if (user.role !== 'admin' && !(user.role === 'user' && body.kind === 'reservation')) {
+        throw requestError('User accounts can create room reservations only.', 403);
+      }
+      const schedule = database.saveSchedule(body);
       sendJson(response, 201, schedule);
       return;
     }

@@ -48,7 +48,7 @@ function createDatabase(filePath = path.join(__dirname, 'roomq.sqlite'), options
       username TEXT NOT NULL UNIQUE,
       password_salt TEXT NOT NULL,
       password_hash TEXT NOT NULL,
-      role TEXT NOT NULL CHECK (role IN ('admin'))
+      role TEXT NOT NULL CHECK (role IN ('admin', 'user'))
     );
     CREATE TABLE IF NOT EXISTS auth_sessions (
       token_hash TEXT PRIMARY KEY,
@@ -83,8 +83,52 @@ function createDatabase(filePath = path.join(__dirname, 'roomq.sqlite'), options
     CREATE INDEX IF NOT EXISTS auth_sessions_expiry_idx ON auth_sessions(expires_at);
   `);
 
+  migrateUserRoles(db);
   seedBuildings(db);
   seedAdmin(db, options);
+
+  function migrateUserRoles(database) {
+    const schema = database.prepare(
+      "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'users'"
+    ).get();
+    if (schema.sql.includes("'user'")) {
+      return;
+    }
+
+    database.exec('PRAGMA foreign_keys = OFF');
+    try {
+      database.exec('BEGIN IMMEDIATE');
+      database.exec(`
+        ALTER TABLE auth_sessions RENAME TO auth_sessions_legacy;
+        ALTER TABLE users RENAME TO users_legacy;
+        CREATE TABLE users (
+          id INTEGER PRIMARY KEY,
+          username TEXT NOT NULL UNIQUE,
+          password_salt TEXT NOT NULL,
+          password_hash TEXT NOT NULL,
+          role TEXT NOT NULL CHECK (role IN ('admin', 'user'))
+        );
+        CREATE TABLE auth_sessions (
+          token_hash TEXT PRIMARY KEY,
+          user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+          expires_at INTEGER NOT NULL
+        );
+        INSERT INTO users (id, username, password_salt, password_hash, role)
+          SELECT id, username, password_salt, password_hash, role FROM users_legacy;
+        INSERT INTO auth_sessions (token_hash, user_id, expires_at)
+          SELECT token_hash, user_id, expires_at FROM auth_sessions_legacy;
+        DROP TABLE auth_sessions_legacy;
+        DROP TABLE users_legacy;
+        CREATE INDEX auth_sessions_expiry_idx ON auth_sessions(expires_at);
+      `);
+      database.exec('COMMIT');
+    } catch (error) {
+      database.exec('ROLLBACK');
+      throw error;
+    } finally {
+      database.exec('PRAGMA foreign_keys = ON');
+    }
+  }
 
   function seedBuildings(database) {
     const insertBuilding = database.prepare(
@@ -164,6 +208,20 @@ function createDatabase(filePath = path.join(__dirname, 'roomq.sqlite'), options
       SELECT id, username, password_salt, password_hash, role
       FROM users WHERE username = ?
     `).get(username);
+  }
+
+  function createUser(username, password, role = 'user') {
+    if (!['admin', 'user'].includes(role)) {
+      throw new Error('User role is invalid.');
+    }
+    const salt = crypto.randomBytes(16);
+    const hash = crypto.scryptSync(password, salt, 64);
+    const result = db.prepare(`
+      INSERT INTO users (username, password_salt, password_hash, role)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT(username) DO NOTHING
+    `).run(username, salt.toString('hex'), hash.toString('hex'), role);
+    return result.changes ? getUser(username) : null;
   }
 
   function createSession(userId, tokenHash, expiresAt) {
@@ -519,6 +577,7 @@ function createDatabase(filePath = path.join(__dirname, 'roomq.sqlite'), options
 
   return {
     close: () => db.close(),
+    createUser,
     createSession,
     deleteSchedule,
     deleteSession,
