@@ -1,6 +1,13 @@
 # RoomQ
 
-RoomQ is a Node.js-served classroom scheduling and availability application. Its room inventory and plan coordinates come from the existing mapped layouts in `roomq-data.js`; schedule and reservation records are stored in SQLite.
+RoomQ is a Node.js-served classroom scheduling and availability application. Its room inventory and plan coordinates come from the existing mapped layouts in `public/roomq-data.js`; schedule and reservation records are stored in SQLite.
+
+## Project layout
+
+- `src/` contains the Node.js server, SQLite access, and schedule rules.
+- `public/` contains the HTML, CSS, browser scripts, and image assets.
+- `tests/` contains the Node.js test suite.
+- `roomq.sqlite` is the local runtime database and remains in the project root.
 
 ## Requirements
 
@@ -38,7 +45,7 @@ npm test
 
 ## Data notes
 
-- The mapped buildings, floors, classroom positions, and names are shared from `roomq-data.js`; no room positions are generated.
+- The mapped buildings, floors, classroom positions, and names are shared from `public/roomq-data.js`; no room positions are generated.
 - The project has no capacity/facility records or classroom mapping for LAW Rooms. Those values remain unavailable until real records are supplied.
 - Passwords are stored as salted scrypt hashes. Users can create reservations; creating or editing class schedules and managing conflicts requires an administrator session.
 - Browser-local room-use data from earlier versions is not automatically uploaded to the database.
